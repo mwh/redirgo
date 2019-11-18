@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"path"
 )
 
 var rootPath string
@@ -17,11 +18,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "403 permission denied")
 		return
 	}
-	content, err := ioutil.ReadFile(rootPath + r.URL.Path)
+	itemPath := path.Join(rootPath, r.URL.Path)
+	content, err := ioutil.ReadFile(itemPath)
 	if err != nil {
-		w.WriteHeader(404)
-		fmt.Fprintf(w, "404 not found")
-		return
+		content, err = ioutil.ReadFile(path.Join(itemPath, "/.index"))
+		if err != nil {
+			w.WriteHeader(404)
+			fmt.Fprintf(w, "404 not found")
+			return
+		}
 	}
 	dest := string(content)
 	dest = strings.TrimSpace(dest)
